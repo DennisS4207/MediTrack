@@ -1,37 +1,70 @@
-name: MediTrack CI
+name: MediTrack CI Pipeline
 
 on:
   push:
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
   build-and-test:
+    name: Python Build, Tests und Code Quality
     runs-on: ubuntu-latest
 
     steps:
-      - name: Repository herunterladen
+      # 1. Repository herunterladen
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Python einrichten
+      # 2. Python installieren
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
-      - name: Abhängigkeiten installieren
+      # 3. Abhängigkeiten installieren
+      - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pytest
+          pip install pytest pytest-cov ruff
+
           if [ -f requirements.txt ]; then
             pip install -r requirements.txt
           fi
 
-      - name: Python-Code prüfen
+      # 4. Python-Code auf Syntaxfehler prüfen
+      - name: Check Python Syntax
         run: |
           python -m compileall -q .
 
-      - name: Tests ausführen
+      # 5. BONUS: Code Linting
+      - name: Ruff Linting
+        run: |
+          ruff check .
+
+      # 6. Automatisierte Tests ausführen
+      - name: Run Unit Tests
         run: |
           python -m pytest -v
+
+      # 7. BONUS: Code Coverage
+      - name: Generate Coverage Report
+        run: |
+          python -m pytest \
+            --cov=. \
+            --cov-report=term-missing \
+            --cov-report=xml:coverage.xml \
+            --cov-report=html:htmlcov
+
+      # 8. BONUS: Coverage Report speichern
+      - name: Upload Coverage Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: meditrack-coverage-report
+          path: |
+            coverage.xml
+            htmlcov/
+          if-no-files-found: ignore
