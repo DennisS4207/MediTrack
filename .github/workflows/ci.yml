@@ -1,3 +1,8 @@
+# GitHub Actions CI-Pipeline
+# Führt bei Push und Pull Request automatisch
+# Syntaxprüfung, Linting und Tests aus
+# Erstellt zusätzlich einen Coverage-Report
+
 name: MediTrack CI Pipeline
 
 on:
