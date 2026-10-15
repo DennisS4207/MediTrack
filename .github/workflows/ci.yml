@@ -44,16 +44,26 @@ jobs:
         run: |
           ruff check .
 
+      # 6. Automatisierte Tests ausführen
+      # - name: Run Unit Tests
+      #   run: |
+      #     python -m pytest -v
 
-
+      # 7. BONUS: Code Coverage
+      # - name: Generate Coverage Report
+      #   run: |
+      #     python -m pytest \
+      #       --cov=app \
+      #       --cov-report=term-missing \
+      #       --cov-report=xml:coverage.xml \
+      #       --cov-report=html:htmlcov
 
       # 8. BONUS: Coverage Report speichern
-      - name: Upload Coverage Report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: meditrack-coverage-report
-          path: |
-            coverage.xml
-            htmlcov/
-          if-no-files-found: ignore
+      # - name: Upload Coverage Report
+      #   if: always()
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: meditrack-coverage-report
+      #     path: |
+      #       coverage.xml
+      #       htmlcov/
