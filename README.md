@@ -11,8 +11,65 @@ Dennis Part:
 
 Fabians Part:
 
+## Branches und ihre Nutzung, Umgang mit Merge-Konflikten
 
+Wenn mehrere Leute gleichzeitig an einem Projekt arbeiten, will man nicht aus Versehen den funktionierenden Code der anderen kaputtmachen. Genau dafür nutzt man in Git sogenannte Branches (Zweige).
 
+### Was sind Branches und wozu braucht man sie?
+
+Der Hauptzweig eines Projekts heißt meistens `main`. Dort sollte immer nur Code liegen, der auch wirklich funktioniert. 
+
+Wenn man nun an einer neuen Aufgabe oder einem eigenen Abschnitt arbeitet, erstellt man sich einen eigenen Branch. Das ist im Prinzip eine eigene Arbeitskopie vom Projekt. 
+
+**Vorteile von Branches:**
+- Man kann in Ruhe Dinge ausprobieren, ohne die Arbeit des Teams zu stören.
+- Alle im Team können gleichzeitig an ihren eigenen Themen arbeiten.
+- Wenn der eigene Teil fertig ist, lässt man kurz jemanden über einen Pull Request drüberschauen und fügt ihn erst dann wieder mit dem `main`-Branch zusammen (Merge).
+
+### Typischer Ablauf beim Arbeiten mit Branches
+
+**1. Neuen Branch erstellen und wechseln**
+- Bevor man anfängt zu tippen, legt man einen neuen Branch an (in PyCharm unten rechts auf den aktuellen Branch klicken oder im Terminal mit `git switch -c branch-name`).
+- Danach arbeitet man komplett unabhängig vom Hauptprojekt.
+
+**2. Änderungen zwischenspeichern (Commits)**
+- Man bearbeitet seine Dateien ganz normal.
+- Zwischendurch speichert man seine Fortschritte regelmäßig mit einem Commit und einer kurzen Info-Nachricht ab (`git add .` und `git commit -m "Nachricht"`).
+
+**3. Branch hochladen und zusammenführen**
+- Mit `git push` lädt man seinen Branch auf GitHub hoch.
+- Auf GitHub erstellt man dann einen Pull Request.
+- Nachdem ein Teammitglied kurz drübergeschaut hat, wird der Branch in den `main`-Branch gemerged.
+
+---
+
+## Umgang mit Merge-Konflikten
+
+Normalerweise führt Git Änderungen von verschiedenen Leuten automatisch zusammen. Ein **Merge-Konflikt** passiert nur dann, wenn zwei Personen zur selben Zeit **genau dieselbe Zeile** in einer Datei geändert haben. Git weiß dann nicht, welche Version die richtige ist, und fragt nach.
+
+### Konflikte in PyCharm oder IntelliJ lösen (einfachster Weg)
+
+Wenn es beim Zusammenführen einen Konflikt gibt, öffnet die IDE automatisch ein kleines Fenster.
+
+1. Auf **„Merge...“** klicken.
+2. Es öffnet sich eine Ansicht mit drei Spalten:
+   - **Links:** Die eigenen Änderungen.
+   - **Rechts:** Die Änderungen vom anderen Branch / von GitHub.
+   - **Mitte:** Das fertige Ergebnis.
+3. Mit den kleinen Pfeilen (`>>` und `<<`) klickt man sich einfach zusammen, welche Zeilen in die Mitte übernommen werden sollen. Man kann in der Mitte auch direkt Text anpassen.
+4. Wenn alles passt, unten rechts auf **„Apply“** klicken. Damit ist der Konflikt gelöst.
+
+### Konflikte manuell im Editor lösen
+
+Falls man kein Tool nutzt, schreibt Git solche Markierungen direkt in den Text:
+
+```text
+<<<<<<< HEAD
+Hier steht meine eigene Version vom Satz.
+=======
+Hier steht die Version von meinem Teammitglied.
+>>>>>>> anderer-branch
+```
 
 Mareis Part:
 
