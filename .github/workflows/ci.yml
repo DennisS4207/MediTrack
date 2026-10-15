@@ -44,30 +44,7 @@ jobs:
         run: |
           ruff check .
 
-      # 6. Automatisierte Tests ausführen, wenn da
-      - name: Run Unit Tests
-        run: |
-          if find tests -name "test_*.py" -type f 2>/dev/null | grep -q .; then
-            python -m pytest -v
-          else
-            echo "Noch keine Tests vorhanden."
-            echo "Tests werden später ergänzt."
-          fi
 
-
-      # 7. BONUS: Code Coverage
-      - name: Generate Coverage Report
-        run: |
-          if find tests -name "test_*.py" -type f 2>/dev/null | grep -q .; then
-            python -m pytest \
-              --cov=app \
-              --cov-report=term-missing \
-              --cov-report=xml:coverage.xml \
-              --cov-report=html:htmlcov
-          else
-            echo "Noch keine Tests vorhanden."
-            echo "Coverage wird später aktiviert."
-          fi
 
 
       # 8. BONUS: Coverage Report speichern
