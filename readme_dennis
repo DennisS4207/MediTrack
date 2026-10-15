@@ -212,5 +212,3 @@ Die grundlegenden Git-Befehle helfen dabei, Projekte übersichtlich zu verwalten
 | `git switch` | Wechselt den Branch |
 
 Mit diesen Befehlen lassen sich die wichtigsten Aufgaben der Versionsverwaltung mit Git erledigen. Sie bilden die Grundlage für die strukturierte Entwicklung und die Zusammenarbeit in Softwareprojekten.
-
-Tipp: Speichere den Text als `README.md` im Hauptverzeichnis deines Projekts. GitHub und GitLab zeigen die Markdown-Datei automatisch formatiert an.
