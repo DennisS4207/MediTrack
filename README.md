@@ -380,6 +380,6 @@ Beide Entwicklungsumgebungen verfügen über integrierte Git-Werkzeuge. Dadurch 
 
 ## Dokumentation der Zusammenarbeit:
 
-* **Dennis:** Erstellung des GitHub-Repositories, Anlegen der leeren README.md-Datei, Ausarbeitung der Abschnitte „Was ist Git und warum sollte es verwendet werden?“ sowie „Grundlegende Git-Befehle (git init, git add, git commit, git push)“.
-* **Fabian:** Ausarbeitung des Abschnitts „Branches und ihre Nutzung, Umgang mit Merge-Konflikten“, Durchführung des finalen Merges in den Haupt-Branch, Ergänzung dieser Notiz zur Teamarbeit und Hochladen des Repository-Links auf Moodle.
-* **Marei:** Ausarbeitung der Abschnitte zur Bedienung von IntelliJ IDEA und PyCharm (Local vs. Remote Repository) sowie Vorstellung nützlicher Git-Tools und Plattformen (GitHub, GitLab, GitHub Desktop).
+* **Dennis Schmelzet:** Erstellung des GitHub-Repositories, Anlegen der leeren README.md-Datei, Ausarbeitung der Abschnitte „Was ist Git und warum sollte es verwendet werden?“ sowie „Grundlegende Git-Befehle (git init, git add, git commit, git push)“.
+* **Fabian Scholl:** Ausarbeitung des Abschnitts „Branches und ihre Nutzung, Umgang mit Merge-Konflikten“, Durchführung des finalen Merges in den Haupt-Branch, Ergänzung dieser Notiz zur Teamarbeit und Hochladen des Repository-Links auf Moodle.
+* **Marei Wiesehan:** Ausarbeitung der Abschnitte zur Bedienung von IntelliJ IDEA und PyCharm (Local vs. Remote Repository) sowie Vorstellung nützlicher Git-Tools und Plattformen (GitHub, GitLab, GitHub Desktop).
