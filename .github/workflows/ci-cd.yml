@@ -1,0 +1,76 @@
+name: Python CI/CD Pipeline
+
+# Definiert, wann die Pipeline starten soll
+on:
+  push:
+    branches: [ "main" ] # Startet bei jedem Push auf den Hauptbranch
+  pull_request:
+    branches: [ "main" ] # Startet, wenn ein PR gegen main geöffnet wird
+
+jobs:
+  # ----------------------------------------------------
+  # JOB 1: Continuous Integration (Prüfen & Testen)
+  # ----------------------------------------------------
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. Holt den Code aus dem Repository
+    - name: Code auschecken
+      uses: actions/checkout@v4
+
+    # 2. Richtet die gewünschte Python-Version ein
+    - name: Python einrichten
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11' # Hier deine Python-Version eintragen
+
+    # 3. Cache für Pip-Abhängigkeiten (beschleunigt zukünftige Pipeline-Runs)
+    - name: Pip Cache aktivieren
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    # 4. Installiert die in requirements.txt definierten Pakete
+    - name: Abhängigkeiten installieren
+      run: |
+        python -m pip install --upgrade pip
+        pip install flake8 pytest
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    # 5. Code-Qualität prüfen (Linting) mit flake8
+    - name: Code mit flake8 prüfen
+      run: |
+        # Stoppt den Build bei Syntaxfehlern oder unbestimmten Namen
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # Warnungen werden als Info angezeigt, stoppen den Build aber nicht
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+    # 6. Automatisierte Tests mit pytest ausführen
+    - name: Tests ausführen
+      run: |
+        pytest
+  # ----------------------------------------------------
+  # JOB 2: Continuous Deployment (Nur wenn CI erfolgreich)
+  # ----------------------------------------------------
+  deploy:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' # Verhindert Deployment bei Pull Requests
+
+    steps:
+    - name: Code auf den Produktivserver übertragen (Beispiel via SSH)
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        script: |
+          cd /var/www/mein-projekt
+          git pull origin main
+          source venv/bin/activate
+          pip install -r requirements.txt
+          sudo systemctl restart mein-python-dienst
