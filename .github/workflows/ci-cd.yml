@@ -52,7 +52,14 @@ jobs:
     # 6. Automatisierte Tests mit pytest ausführen
     - name: Tests ausführen
       run: |
-        pytest
+        pytest --junitxml=pytest.xml
+        
+    #     6. Testberichte direkt in GitHub Actions anzeigen (optional, aber sehr nützlich)
+    - name: Testberichte veröffentlichen
+      uses: mikepenz/action-junit-report@v4
+      if: success() || failure() # Wird auch ausgeführt, wenn Tests fehlschlagen
+      with:
+        report_paths: '**/pytest.xml'
   # ----------------------------------------------------
   # JOB 2: Continuous Deployment (Nur wenn CI erfolgreich)
   # ----------------------------------------------------
