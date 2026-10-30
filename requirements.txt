@@ -1,0 +1,5 @@
+# Test- und Lint-Werkzeuge
+pytest
+flake8
+
+# Projektabhängigkeiten
