@@ -1,7 +1,7 @@
 import pytest
 from uuid import uuid4
 
-from meditrack.benutzerverwaltung.domain.model import Benutzerkonto
+from meditrack.benutzerverwaltung.domain.model import Benutzerkonto, Benutzerrolle
 
 
 # Happy-Path-Tests
@@ -11,8 +11,7 @@ def test_gueltiges_benutzerkonto():
         benutzer_id=uuid4(),
         email="max@example.com",
         passwort_hash="gesicherter_hash",
-        rolle="PATIENT"
-    )
+        rolle=Benutzerrolle.PATIENT    )
 
     assert konto.email == "max@example.com"
     assert konto.rolle == "PATIENT"
@@ -23,8 +22,7 @@ def test_mitarbeiterkonto():
         benutzer_id=uuid4(),
         email="arzt@example.com",
         passwort_hash="gesicherter_hash",
-        rolle="MITARBEITER"
-    )
+        rolle=Benutzerrolle.MITARBEITER    )
 
     assert konto.rolle == "MITARBEITER"
 
