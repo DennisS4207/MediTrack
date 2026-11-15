@@ -6,3 +6,12 @@ env/
 # Datenbank
 *.db
 datenbank.db
+
+# Python- und Test-Artefakte
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+test-results.xml

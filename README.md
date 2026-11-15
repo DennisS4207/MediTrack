@@ -378,6 +378,70 @@ Beide Entwicklungsumgebungen verfügen über integrierte Git-Werkzeuge. Dadurch 
 
 
 
+## Architektur: Modularität und Testbarkeit (DDD)
+
+[![Python application](https://github.com/DennisS4207/MediTrack/actions/workflows/python-app.yml/badge.svg)](https://github.com/DennisS4207/MediTrack/actions/workflows/python-app.yml)
+
+Der Code ist nach Domain-Driven Design in fünf **Bounded Contexts** gegliedert. Jeder Context ist ein eigenes Paket mit drei Schichten:
+
+```
+meditrack/
+├── benutzerverwaltung/          Konten, Rollen
+├── patientenverwaltung/         Patienten-Stammdaten
+├── vitaldatenueberwachung/      Messwerte, Grenzwerte
+├── alarmmanagement/             Warnmeldungen
+└── behandlungsdokumentation/    Behandlungen, Verlauf
+    ├── domain/                  Entities, Value Objects, Repository-Schnittstellen
+    ├── application/             Application Services (Anwendungsfälle)
+    └── infrastructure/          technische Umsetzung (z. B. In-Memory-Repositories)
+```
+
+**Abhängigkeitsregeln** (werden automatisch von `test/test_architektur.py` geprüft):
+
+| Regel | Bedeutung |
+| --- | --- |
+| R1 | Ein Context importiert nie einen anderen Context. Verweise laufen nur über IDs (z. B. `patient_id`). |
+| R2 | `domain` kennt weder `application` noch `infrastructure`. |
+| R3 | `application` kennt `infrastructure` nicht. Services bekommen das Repository von außen übergeben. |
+| R4 | `domain` und `application` nutzen keine Frameworks (FastAPI, SQLAlchemy, Pydantic …). |
+
+Weil die Services nur gegen die Repository-**Schnittstelle** arbeiten, lassen sich alle Anwendungsfälle ohne Datenbank und ohne Webserver testen. Die Tests nutzen dafür die In-Memory-Repositories.
+
+## CI-Pipeline (GitHub Actions)
+
+Die Pipeline liegt in `.github/workflows/python-app.yml`. Wir haben GitHub Actions gewählt, weil das Repository bereits auf GitHub liegt und keine zusätzliche Infrastruktur nötig ist.
+
+**Wann läuft sie?** Bei jedem Push (auch auf Feature-Branches) und bei jedem Pull Request gegen `main`. Ein Pull Request soll erst gemerged werden, wenn alle Schritte grün sind. Zusätzlich kann sie manuell gestartet werden.
+
+**Was passiert?** Der Job läuft parallel mit Python 3.10, 3.11 und 3.12:
+
+1. Code auschecken und Python einrichten (mit Pip-Cache)
+2. Abhängigkeiten aus `requirements.txt` installieren
+3. `flake8`: Syntaxfehler und undefinierte Namen brechen den Build
+4. `flake8`: Stil-Prüfung (maximale Zeilenlänge 127, Komplexität ≤ 10)
+5. **Architektur-Regeln** prüfen (`test/test_architektur.py`)
+6. **Alle Tests** mit `pytest` ausführen, inklusive Coverage. Unter 90 % Abdeckung schlägt der Build fehl.
+7. Testergebnis (`test-results.xml`) und Coverage-Bericht (`coverage.xml`) als Artefakt speichern
+
+**Welche Tests?** `pytest` findet automatisch alle Dateien in `test/` (siehe `pytest.ini`):
+
+| Testdatei | Prüft |
+| --- | --- |
+| `test_benutzerkonto.py` | Benutzerkonto, E-Mail-/Rollen-Validierung, Registrierungs-Service |
+| `test_patient.py` | Patient (Namen, Geburtsdatum), Patienten-Service |
+| `test_messwert.py`, `test_grenzwertregel.py`, `test_vitalmessung.py` | Value Objects und Vitalmessung |
+| `test_warnmeldung.py` | Warnmeldung, Schweregrad, Alarm-Service |
+| `test_behandlung.py` | Behandlung, Verlauf, Behandlungs-Service |
+| `test_architektur.py` | Einhaltung der Schichten- und Context-Regeln |
+
+**Lokal ausführen** (identisch zur Pipeline):
+
+```
+pip install -r requirements.txt
+flake8 meditrack test main.py --max-complexity=10 --max-line-length=127
+pytest --cov=meditrack --cov-fail-under=90
+```
+
 ## Dokumentation der Zusammenarbeit:
 
 * **Dennis Schmelzet:** Erstellung des GitHub-Repositories, Anlegen der leeren README.md-Datei, Ausarbeitung der Abschnitte „Was ist Git und warum sollte es verwendet werden?“ sowie „Grundlegende Git-Befehle (git init, git add, git commit, git push)“.
