@@ -1,9 +1,9 @@
 
+import re
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import ClassVar
 from uuid import UUID
-import re
 
 
 class Benutzerrolle(str, Enum):
@@ -24,10 +24,10 @@ class Benutzerkonto:
 
     def __post_init__(self):
         if not isinstance(self.benutzer_id, UUID):
-            raise ValueError("Ungültige Benutzer-ID")
+            raise ValueError("Ungültige Benutzer-ID")  # noqa: TRY004 (Domänenvalidierung wirft bewusst ValueError)
 
         if not isinstance(self.email, str):
-            raise ValueError("E-Mail muss ein Text sein")
+            raise ValueError("E-Mail muss ein Text sein")  # noqa: TRY004 (Domänenvalidierung wirft bewusst ValueError)
 
         if not self.EMAIL_REGEX.fullmatch(self.email):
             raise ValueError("Ungültige E-Mail-Adresse")
@@ -38,8 +38,12 @@ class Benutzerkonto:
         ):
             raise ValueError("Passwort-Hash darf nicht leer sein")
 
-        if not isinstance(self.rolle, Benutzerrolle):
-            raise ValueError("Ungültige Benutzerrolle")
+        # Text ("PATIENT") wird in das Enum umgewandelt; unbekannte Werte -> ValueError.
+        # Das Objekt ist frozen, daher object.__setattr__ statt normaler Zuweisung.
+        try:
+            object.__setattr__(self, "rolle", Benutzerrolle(self.rolle))
+        except ValueError:
+            raise ValueError("Ungültige Benutzerrolle") from None
 
     @property
     def ist_patient(self) -> bool:

@@ -1,8 +1,10 @@
-from fastapi import FastAPI, Depends
+from typing import Annotated
+
+from fastapi import Depends, FastAPI
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-from sqlalchemy import create_engine, Column, Integer, String
-from sqlalchemy.orm import sessionmaker, Session, declarative_base
+from sqlalchemy import Column, Integer, String, create_engine
+from sqlalchemy.orm import Session, declarative_base, sessionmaker
 
 # --- 1. DATENBANK SETUP ---
 SQLALCHEMY_DATABASE_URL = "sqlite:///./datenbank.db"
@@ -31,6 +33,9 @@ def get_db():
         db.close()
 
 
+DbSession = Annotated[Session, Depends(get_db)]
+
+
 # --- 3. FASTAPI SETUP & MODELLE ---
 app = FastAPI()
 
@@ -46,7 +51,7 @@ def lade_weboberflaeche():
 
 
 @app.post("/api/daten_senden")
-def empfange_daten(paket: MeinDatenPaket, db: Session = Depends(get_db)):
+def empfange_daten(paket: MeinDatenPaket, db: DbSession):
     # Neuen Eintrag in die Datenbank schreiben
     neuer_eintrag = Eintrag(text_inhalt=paket.text_eingabe)
     db.add(neuer_eintrag)
@@ -57,7 +62,7 @@ def empfange_daten(paket: MeinDatenPaket, db: Session = Depends(get_db)):
 
 
 @app.get("/api/eintraege")
-def hole_alle_eintraege(db: Session = Depends(get_db)):
+def hole_alle_eintraege(db: DbSession):
     # Alle Einträge aus der Datenbank auslesen
     eintraege = db.query(Eintrag).all()
     return eintraege
