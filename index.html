@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FastAPI & SQLite</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 40px; max-width: 600px; margin: auto; }
+        input[type="text"] { padding: 10px; font-size: 16px; width: 60%; border: 1px solid #ccc; border-radius: 5px; }
+        button { background-color: #28a745; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 5px; cursor: pointer; margin-left: 10px; }
+        button:hover { background-color: #218838; }
+        #status { margin-top: 15px; color: green; font-weight: bold; }
+        .eintrag-karte { background-color: #f1f1f1; padding: 10px; margin-top: 10px; border-radius: 5px; border-left: 5px solid #007bff; }
+    </style>
+</head>
+<body>
+
+    <h1>Datenbank-Tester</h1>
+
+    <input type="text" id="meinText" placeholder="Neuen Text speichern...">
+    <button onclick="datenSenden()">Speichern</button>
+    <div id="status"></div>
+
+    <h2>Gespeicherte Einträge:</h2>
+    <div id="listenContainer">Lade Einträge...</div>
+
+    <script>
+        // Wird sofort ausgeführt, wenn die Seite lädt
+        window.onload = ladeEintraege;
+
+        async function datenSenden() {
+            const eingabeFeld = document.getElementById('meinText');
+            const statusDiv = document.getElementById('status');
+
+            if (eingabeFeld.value.trim() === "") return;
+
+            statusDiv.innerHTML = "Speichere...";
+
+            try {
+                await fetch('/api/daten_senden', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text_eingabe: eingabeFeld.value })
+                });
+
+                statusDiv.innerHTML = "Erfolgreich in SQLite gespeichert!";
+                eingabeFeld.value = ""; // Feld leeren
+                ladeEintraege(); // Liste sofort aktualisieren
+
+                // Status-Meldung nach 3 Sekunden ausblenden
+                setTimeout(() => statusDiv.innerHTML = "", 3000);
+            } catch (error) {
+                statusDiv.innerHTML = `<span style="color: red;">Fehler beim Speichern.</span>`;
+            }
+        }
+
+        async function ladeEintraege() {
+            const container = document.getElementById('listenContainer');
+            try {
+                // Ruft alle Daten aus SQLite ab
+                const response = await fetch('/api/eintraege');
+                const daten = await response.json();
+
+                if (daten.length === 0) {
+                    container.innerHTML = "Noch keine Einträge in der Datenbank.";
+                    return;
+                }
+
+                // Baue die Liste als HTML auf
+                container.innerHTML = "";
+                daten.forEach(eintrag => {
+                    container.innerHTML += `
+                        <div class="eintrag-karte">
+                            <small>ID: ${eintrag.id}</small><br>
+                            <strong>${eintrag.text_inhalt}</strong>
+                        </div>
+                    `;
+                });
+            } catch (error) {
+                container.innerHTML = `<span style="color: red;">Datenbank konnte nicht geladen werden.</span>`;
+            }
+        }
+    </script>
+
+</body>
+</html>

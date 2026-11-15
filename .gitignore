@@ -1,0 +1,8 @@
+# Virtuelle Umgebungen
+.venv/
+venv/
+env/
+
+# Datenbank
+*.db
+datenbank.db
