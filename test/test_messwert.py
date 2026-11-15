@@ -2,8 +2,8 @@ import pytest
 
 from meditrack.vitaldatenueberwachung.domain.model import Messwert
 
-
 # Happy-Path-Tests
+
 
 def test_gueltiger_messwert():
     messwert = Messwert(80, "bpm")
@@ -48,6 +48,25 @@ def test_nan_wert():
 def test_unendlicher_wert():
     with pytest.raises(ValueError):
         Messwert(float("inf"), "bpm")
+
+
+@pytest.mark.parametrize("wert", [-float("inf"), None, "80", True, 10**400])
+def test_unzulaessige_werte(wert):
+    # Auch Nicht-Zahlen und zu große Ganzzahlen müssen als ValueError abgelehnt werden
+    with pytest.raises(ValueError):
+        Messwert(wert, "bpm")
+
+
+@pytest.mark.parametrize("einheit", [None, 5])
+def test_einheit_muss_text_sein(einheit):
+    with pytest.raises(ValueError):
+        Messwert(80, einheit)
+
+
+def test_gleiche_messwerte_sind_gleich():
+    assert Messwert(80, "bpm") == Messwert(80, "bpm")
+    assert Messwert(80, "bpm") != Messwert(81, "bpm")
+    assert Messwert(80, "bpm") != Messwert(80, "mmHg")
 
 
 # Unveränderlichkeit des Value Objects
