@@ -1,0 +1,125 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --ink: #0F2E35;
+  --ink-soft: #46666e;
+  --accent: #0E7C86;
+  --glass: rgba(255, 255, 255, 0.50);
+  --glass-hi: rgba(255, 255, 255, 0.80);
+  --edge: rgba(255, 255, 255, 0.85);
+  --shadow: 0 10px 34px rgba(15, 46, 53, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.95),
+            inset 0 -1px 0 rgba(255, 255, 255, 0.25);
+  --blur: blur(22px) saturate(165%);
+  color-scheme: light;
+}
+
+/* ---------- Hintergrund: weiches Aurora-Verlauf, das durch das Glas schimmert ---------- */
+.stApp {
+  background:
+    radial-gradient(55rem 38rem at 8% -8%, rgba(94, 234, 212, 0.60), transparent 62%),
+    radial-gradient(50rem 40rem at 104% 2%, rgba(129, 140, 248, 0.48), transparent 62%),
+    radial-gradient(46rem 36rem at 86% 104%, rgba(125, 211, 252, 0.55), transparent 62%),
+    radial-gradient(40rem 32rem at -4% 100%, rgba(253, 186, 116, 0.38), transparent 62%),
+    #E8F2F3;
+  background-attachment: fixed;
+  color: var(--ink);
+}
+[data-testid="stHeader"] { background: transparent; }
+.block-container { padding-top: 2.5rem; max-width: 1200px; }
+
+/* ---------- Schrift ---------- */
+.stApp, .stApp p, .stApp label, .stApp li, .stApp td, .stApp th, .stApp h1, .stApp h2, .stApp h3,
+.stApp button, .stApp input, .stApp textarea {
+  font-family: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+h1, h2, h3 { color: var(--ink); letter-spacing: -0.02em; font-weight: 800; }
+.stApp p, .stApp label, [data-testid="stWidgetLabel"] { color: var(--ink); }
+[data-testid="stCaptionContainer"], .stApp small { color: var(--ink-soft); }
+
+/* ---------- Glas-Flächen ---------- */
+[data-testid="stMetric"], [data-testid="stForm"], [data-testid="stExpander"], [data-testid="stAlert"],
+[data-testid="stPlotlyChart"], [data-testid="stDataFrame"], [data-testid="stTable"] {
+  background: var(--glass) !important;
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--edge) !important;
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+}
+[data-testid="stMetric"] { padding: 1rem 1.2rem; }
+[data-testid="stForm"], [data-testid="stExpander"] { padding: 1.2rem 1.4rem; }
+[data-testid="stPlotlyChart"], [data-testid="stDataFrame"] { padding: 0.6rem; overflow: hidden; }
+[data-testid="stMetricLabel"] { color: var(--ink-soft); font-weight: 600; }
+[data-testid="stMetricValue"] { color: var(--ink); font-weight: 700; }
+
+/* Meldungen: getöntes Glas, Farbe ist nie das einzige Signal (Text und Symbol stehen dabei) */
+[data-testid="stAlert"] { padding: 0.35rem 0.5rem; color: var(--ink); }
+[data-testid="stAlert"] * { color: var(--ink) !important; }
+[data-testid="stAlert"]:has([data-testid="stAlertContentError"]) { background: rgba(214, 69, 45, 0.16) !important; border-color: rgba(214, 69, 45, 0.45) !important; }
+[data-testid="stAlert"]:has([data-testid="stAlertContentWarning"]) { background: rgba(232, 157, 20, 0.18) !important; border-color: rgba(232, 157, 20, 0.50) !important; }
+[data-testid="stAlert"]:has([data-testid="stAlertContentSuccess"]) { background: rgba(46, 150, 104, 0.16) !important; border-color: rgba(46, 150, 104, 0.45) !important; }
+[data-testid="stAlert"]:has([data-testid="stAlertContentInfo"]) { background: rgba(30, 120, 170, 0.14) !important; border-color: rgba(30, 120, 170, 0.40) !important; }
+
+/* ---------- Seitenleiste ---------- */
+[data-testid="stSidebar"] {
+  background: rgba(255, 255, 255, 0.34);
+  backdrop-filter: blur(26px) saturate(170%);
+  -webkit-backdrop-filter: blur(26px) saturate(170%);
+  border-right: 1px solid var(--edge);
+}
+[data-testid="stSidebar"] > div:first-child { background: transparent; }
+/* Navigation als Glas-Pillen statt Radio-Punkten */
+[data-testid="stSidebar"] [role="radiogroup"] { gap: 0.3rem; }
+[data-testid="stSidebar"] label[data-baseweb="radio"] {
+  padding: 0.55rem 0.9rem; border-radius: 14px; border: 1px solid transparent;
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s; width: 100%;
+}
+[data-testid="stSidebar"] label[data-baseweb="radio"] > div:first-child { display: none; }
+[data-testid="stSidebar"] label[data-baseweb="radio"]:hover { background: rgba(255, 255, 255, 0.45); }
+[data-testid="stSidebar"] label[data-baseweb="radio"]:has(input:checked) {
+  background: var(--glass-hi); border-color: var(--edge); box-shadow: var(--shadow); font-weight: 700;
+}
+
+/* ---------- Tabs als Glas-Leiste ---------- */
+.stTabs [data-baseweb="tab-list"] {
+  gap: 0.25rem; padding: 0.3rem; width: fit-content; max-width: 100%;
+  background: var(--glass); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--edge); border-radius: 999px; box-shadow: var(--shadow);
+}
+.stTabs button[data-baseweb="tab"] { border-radius: 999px; padding: 0.4rem 1.1rem; color: var(--ink-soft); font-weight: 600; }
+.stTabs button[data-baseweb="tab"][aria-selected="true"] { background: var(--glass-hi); color: var(--ink); box-shadow: var(--shadow); }
+.stTabs [data-baseweb="tab-highlight"], .stTabs [data-baseweb="tab-border"] { display: none; }
+.stTabs [data-baseweb="tab-panel"] { padding-top: 1.2rem; }
+
+/* ---------- Buttons ---------- */
+.stButton > button, [data-testid="stFormSubmitButton"] button {
+  border-radius: 999px; padding: 0.5rem 1.4rem; font-weight: 700; color: var(--ink);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.50));
+  border: 1px solid var(--edge); box-shadow: var(--shadow);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.stButton > button:hover, [data-testid="stFormSubmitButton"] button:hover {
+  transform: translateY(-1px); box-shadow: 0 14px 34px rgba(15, 46, 53, 0.18), inset 0 1px 0 #fff; color: var(--ink);
+}
+.stButton > button:active, [data-testid="stFormSubmitButton"] button:active { transform: translateY(0); }
+[data-testid="stFormSubmitButton"] button {
+  background: linear-gradient(180deg, rgba(20, 110, 120, 0.95), rgba(14, 80, 90, 0.95)); color: #fff;
+  border-color: rgba(255, 255, 255, 0.5);
+}
+[data-testid="stFormSubmitButton"] button:hover { color: #fff; }
+[data-testid="stFormSubmitButton"] button p { color: #fff; }
+.stButton > button:focus-visible, [data-testid="stFormSubmitButton"] button:focus-visible { outline: 3px solid rgba(14, 124, 134, 0.55); outline-offset: 2px; }
+
+/* ---------- Eingabefelder ---------- */
+[data-baseweb="input"], [data-baseweb="textarea"], [data-baseweb="select"] > div {
+  background: rgba(255, 255, 255, 0.58) !important; border: 1px solid var(--edge) !important;
+  border-radius: 14px !important; box-shadow: inset 0 1px 2px rgba(15, 46, 53, 0.06);
+}
+[data-baseweb="input"] input, [data-baseweb="textarea"] textarea { background: transparent !important; color: var(--ink); }
+[data-baseweb="input"]:focus-within, [data-baseweb="textarea"]:focus-within, [data-baseweb="select"] > div:focus-within {
+  border-color: var(--accent) !important; box-shadow: 0 0 0 3px rgba(14, 124, 134, 0.22);
+}
+
+/* Weniger Bewegung, wenn das Betriebssystem es wünscht */
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
