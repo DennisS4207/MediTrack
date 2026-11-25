@@ -33,6 +33,12 @@ def get_backend() -> MeditrackBackend:
     b = MeditrackBackend()
     if os.getenv("MEDITRACK_DEMO", "1") == "1":
         demo_daten_laden(b)
+    admin_mail, admin_pw = os.getenv("MEDITRACK_ADMIN_EMAIL"), os.getenv("MEDITRACK_ADMIN_PASSWORD")
+    if admin_mail and admin_pw:  # Mitarbeiterkonto beim Start anlegen
+        try:
+            b.registrieren(admin_mail, admin_pw, "MITARBEITER")
+        except ValueError:
+            pass
     return b
 
 
@@ -91,18 +97,24 @@ def seite_login(b: MeditrackBackend):
                     st.rerun()
                 except ValueError as e:
                     st.error(str(e))
-        with tab_r.form("register"):  # nur Mitarbeiterkonten
+        with tab_r.form("register"):  # Selbstregistrierung ausschließlich für Patienten
+            st.caption("Die Registrierung ist nur für Patienten möglich. Verwende die E-Mail-Adresse, "
+                       "die du dem Personal genannt hast.")
             email = st.text_input("E-Mail", key="reg_email")
             pw = st.text_input("Passwort (mindestens 8 Zeichen)", type="password", key="reg_pw")
-            st.caption("Patientenkonten legt das Personal beim Anlegen des Patienten an.")
-            if st.form_submit_button("Konto anlegen"):
-                try:
-                    b.registrieren(email, pw, "MITARBEITER")
-                    st.success("Konto angelegt. Du kannst dich jetzt anmelden.")
-                except ValueError as e:
-                    st.error(str(e))
+            pw2 = st.text_input("Passwort wiederholen", type="password", key="reg_pw2")
+            if st.form_submit_button("Als Patient registrieren"):
+                if pw != pw2:
+                    st.error("Die Passwörter stimmen nicht überein")
+                else:
+                    try:
+                        b.patient_registrieren(email, pw)
+                        st.success("Registrierung abgeschlossen. Du kannst dich jetzt anmelden.")
+                    except ValueError as e:
+                        st.error(str(e))
         if os.getenv("MEDITRACK_DEMO", "1") == "1":
-            st.caption("Demo-Zugang: pflege@meditrack.test, Passwort demo-passwort")
+            st.caption("Demo-Zugang Personal: pflege@meditrack.test, Passwort demo-passwort. "
+                       "Registrierung ausprobieren: karl@meditrack.test")
 
 
 # ---------------------------------------------------------------- Seiten
@@ -180,9 +192,9 @@ def seite_patient(b: MeditrackBackend, eigene_id=None):
     else:
         pid = st.selectbox("Patient", list(patienten), format_func=lambda i: name(patienten[i]), key="patient_wahl")
     p = patienten[pid]
-    konto = None if eigene_id else b.konto_email_fuer(pid)
+    mail = None if eigene_id else b.patient_email.get(pid)
     st.caption(f"{alter(p.geburtsdatum)} Jahre, geboren am {p.geburtsdatum:%d.%m.%Y}"
-               + (f", Patientenkonto: {konto}" if konto else ""))
+               + (f", E-Mail: {mail} ({'Konto aktiv' if b.hat_konto(pid) else 'noch nicht registriert'})" if mail else ""))
 
     messungen = b.messungen(pid)
     letzte = {m.vitaltyp.bezeichnung: m for m in messungen}
@@ -259,15 +271,15 @@ def seite_neuer_patient(b: MeditrackBackend):
         geb = c[2].date_input("Geburtsdatum", value=date(1970, 1, 1), min_value=date(1900, 1, 1), max_value=date.today(),
                               key="pat_geb")
         email = st.text_input("E-Mail-Adresse des Patienten", key="pat_email",
-                              help="Daraus entsteht das Patientenkonto, über das der Patient seine Akte einsehen kann.")
+                              help="Mit dieser Adresse registriert sich der Patient selbst und sieht danach seine Akte.")
         if st.form_submit_button("Patient speichern"):
             try:
-                p, konto, pw = b.patient_mit_konto_anlegen(vorname, nachname, geb, email)
+                p = b.patient_anlegen_mit_email(vorname, nachname, geb, email)
             except ValueError as e:
                 st.error(str(e))
             else:
-                flash("success", f"{name(p)} wurde angelegt. Zugang: {konto.email}, Initialpasswort `{pw}` "
-                                 "(wird nur jetzt angezeigt, bitte dem Patienten sicher übergeben).")
+                flash("success", f"{name(p)} wurde angelegt. Der Patient kann sich jetzt auf der Startseite mit "
+                                 f"{email.strip().lower()} selbst registrieren.")
                 st.rerun()
 
 

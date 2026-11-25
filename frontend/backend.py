@@ -93,6 +93,8 @@ class MeditrackBackend:
     warn_vitaltyp: dict[UUID, str] = field(default_factory=dict)
     # Das Backend verknüpft Konto und Patient nicht -> Benutzer-ID -> Patienten-ID, hier gemerkt.
     konto_patient: dict[UUID, UUID] = field(default_factory=dict)
+    # Vom Personal hinterlegte E-Mail-Adresse je Patient (Patient-ID -> E-Mail, kleingeschrieben).
+    patient_email: dict[UUID, str] = field(default_factory=dict)
 
     def __post_init__(self):
         self.patienten = PatientenService(self.patienten_repo)
@@ -116,30 +118,37 @@ class MeditrackBackend:
     def patient_anlegen(self, vorname: str, nachname: str, geburtsdatum: date) -> Patient:
         return self.patienten.patient_anlegen(vorname, nachname, geburtsdatum)
 
-    def patient_mit_konto_anlegen(self, vorname: str, nachname: str, geburtsdatum: date, email: str,
-                                  passwort: str | None = None) -> tuple[Patient, Benutzerkonto, str]:
-        """Legt Patient und Patientenkonto an und verknüpft beide über die E-Mail-Adresse.
-        Ohne Passwort wird ein Initialpasswort erzeugt. Liefert (Patient, Konto, Passwort)."""
-        email = (email or "").strip()
+    def patient_anlegen_mit_email(self, vorname: str, nachname: str, geburtsdatum: date, email: str) -> Patient:
+        """Legt den Patienten an und hinterlegt seine E-Mail-Adresse. Mit dieser Adresse kann er sich
+        anschließend selbst registrieren und wird dabei mit seiner Akte verknüpft."""
+        email = (email or "").strip().lower()
         if not Benutzerkonto.EMAIL_REGEX.fullmatch(email):
             raise ValueError("Ungültige E-Mail-Adresse")
-        if self.benutzer_repo.finde_nach_email(email) is not None:
-            raise ValueError("E-Mail-Adresse ist bereits registriert")
-        passwort = passwort or secrets.token_urlsafe(9)
+        if email in self.patient_email.values() or self.benutzer_repo.finde_nach_email(email) is not None:
+            raise ValueError("E-Mail-Adresse ist bereits vergeben")
         patient = self.patient_anlegen(vorname, nachname, geburtsdatum)  # prüft Name und Geburtsdatum
+        self.patient_email[patient.patient_id] = email
+        return patient
+
+    def patient_registrieren(self, email: str, passwort: str) -> Benutzerkonto:
+        """Selbstregistrierung für Patienten. Es entsteht immer ein Konto mit der Rolle PATIENT,
+        und nur, wenn das Personal zu dieser E-Mail-Adresse eine Patientenakte angelegt hat."""
+        email = (email or "").strip().lower()
+        patient_id = next((pid for pid, mail in self.patient_email.items() if mail == email), None)
+        if patient_id is None:
+            raise ValueError("Zu dieser E-Mail-Adresse gibt es keine Patientenakte. Bitte wende dich an das Personal.")
+        if self.hat_konto(patient_id):
+            raise ValueError("Für diese E-Mail-Adresse existiert bereits ein Konto")
         konto = self.registrieren(email, passwort, "PATIENT")
-        self.konto_patient[konto.benutzer_id] = patient.patient_id
-        return patient, konto, passwort
+        self.konto_patient[konto.benutzer_id] = patient_id
+        return konto
 
     def patient_id_fuer(self, konto: Benutzerkonto) -> UUID | None:
         """Patienten-ID, die zu einem Patientenkonto gehört (None, wenn keine Verknüpfung besteht)."""
         return self.konto_patient.get(konto.benutzer_id)
 
-    def konto_email_fuer(self, patient_id: UUID) -> str | None:
-        for benutzer_id, pid in self.konto_patient.items():
-            if pid == patient_id:
-                return next((k.email for k in self.benutzer_repo.benutzer.values() if k.benutzer_id == benutzer_id), None)
-        return None
+    def hat_konto(self, patient_id: UUID) -> bool:
+        return patient_id in self.konto_patient.values()
 
     def alle_patienten(self) -> list[Patient]:
         # Das Repository-Interface hat keine Listenabfrage; die In-Memory-Implementierung schon.
@@ -194,7 +203,10 @@ def demo_daten_laden(b: MeditrackBackend) -> Benutzerkonto:
     for i, (vn, nn, geb) in enumerate([("Helga", "Brandt", date(1948, 3, 12)), ("Karl", "Neumann", date(1957, 9, 30)),
                                        ("Sabine", "Roth", date(1971, 1, 22))]):
         if i == 0:  # Demo-Patientenkonto, verknüpft mit der ersten Akte
-            p, _, _ = b.patient_mit_konto_anlegen(vn, nn, geb, "patient@meditrack.test", "demo-passwort")
+            p = b.patient_anlegen_mit_email(vn, nn, geb, "patient@meditrack.test")
+            b.patient_registrieren("patient@meditrack.test", "demo-passwort")
+        elif i == 1:  # E-Mail hinterlegt, noch nicht registriert: zum Ausprobieren der Registrierung
+            p = b.patient_anlegen_mit_email(vn, nn, geb, "karl@meditrack.test")
         else:
             p = b.patient_anlegen(vn, nn, geb)
         for h in range(12, -1, -1):

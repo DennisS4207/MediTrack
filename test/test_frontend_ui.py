@@ -77,3 +77,31 @@ def test_patientenkonto_sieht_nur_die_eigene_akte_ohne_erfassen():
     assert at.title[0].value == "Meine Akte"
     assert all(r.key != "nav" for r in at.radio)  # keine Personal-Navigation
     assert [t.label for t in at.tabs] == ["Vitalwerte", "Behandlungsverlauf"]
+
+
+def test_registrierung_ohne_patientenakte_zeigt_fehler_und_legt_kein_konto_an():
+    at = AppTest.from_file(APP, default_timeout=30).run()
+    at.text_input(key="reg_email").input("fremd@mail.de")
+    at.text_input(key="reg_pw").input("langes-passwort")
+    at.text_input(key="reg_pw2").input("langes-passwort")
+    at.button[1].click().run()
+    assert any("Patientenakte" in e.value for e in at.error)
+    assert all(s.key != "reg_rolle" for s in at.selectbox)  # keine Rollenauswahl mehr
+    at.text_input(key="login_email").input("fremd@mail.de")
+    at.text_input(key="login_pw").input("langes-passwort")
+    at.button[0].click().run()
+    assert any("falsch" in e.value for e in at.error)
+
+
+def test_registrierung_mit_hinterlegter_email_fuehrt_zur_eigenen_akte():
+    at = AppTest.from_file(APP, default_timeout=30).run()
+    at.text_input(key="reg_email").input("karl@meditrack.test")
+    at.text_input(key="reg_pw").input("langes-passwort")
+    at.text_input(key="reg_pw2").input("langes-passwort")
+    at.button[1].click().run()
+    assert any("Registrierung abgeschlossen" in x.value for x in at.success)
+    at.text_input(key="login_email").input("karl@meditrack.test")
+    at.text_input(key="login_pw").input("langes-passwort")
+    at.button[0].click().run()
+    assert at.title[0].value == "Meine Akte"
+    assert all(r.key != "nav" for r in at.radio)  # kein Zugriff auf die Personal-Navigation

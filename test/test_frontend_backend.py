@@ -110,35 +110,66 @@ def test_demo_daten_enthalten_patienten_messungen_und_warnmeldungen():
     assert len(b.offene_warnmeldungen()) >= 1
 
 
-def test_patient_mit_konto_wird_ueber_email_verknuepft():
+def test_patient_registriert_sich_mit_hinterlegter_email_und_wird_verknuepft():
     b = MeditrackBackend()
-    patient, konto, pw = b.patient_mit_konto_anlegen("Erika", "Muster", date(1980, 5, 1), "erika@mail.de")
+    patient = b.patient_anlegen_mit_email("Erika", "Muster", date(1980, 5, 1), "Erika@Mail.de")
+    assert not b.hat_konto(patient.patient_id)
+    konto = b.patient_registrieren("erika@mail.de", "langes-passwort")
     assert konto.rolle.value == "PATIENT"
     assert b.patient_id_fuer(konto) == patient.patient_id
-    assert b.konto_email_fuer(patient.patient_id) == "erika@mail.de"
-    assert b.patient_id_fuer(b.anmelden("ERIKA@mail.de", pw)) == patient.patient_id  # Login mit Initialpasswort
+    assert b.hat_konto(patient.patient_id)
+    assert b.patient_id_fuer(b.anmelden("ERIKA@mail.de", "langes-passwort")) == patient.patient_id
+
+
+def test_registrierung_ohne_patientenakte_wird_abgelehnt():
+    b = MeditrackBackend()
+    with pytest.raises(ValueError):
+        b.patient_registrieren("fremd@mail.de", "langes-passwort")
+    assert b.benutzer_repo.finde_nach_email("fremd@mail.de") is None
+
+
+def test_selbstregistrierung_erzeugt_nie_ein_mitarbeiterkonto():
+    b = MeditrackBackend()
+    b.patient_anlegen_mit_email("Erika", "Muster", date(1980, 5, 1), "erika@mail.de")
+    assert b.patient_registrieren("erika@mail.de", "langes-passwort").rolle.value == "PATIENT"
+
+
+def test_patient_kann_sich_nicht_zweimal_registrieren():
+    b = MeditrackBackend()
+    b.patient_anlegen_mit_email("Erika", "Muster", date(1980, 5, 1), "erika@mail.de")
+    b.patient_registrieren("erika@mail.de", "langes-passwort")
+    with pytest.raises(ValueError):
+        b.patient_registrieren("erika@mail.de", "anderes-passwort")
+
+
+def test_zu_kurzes_passwort_bei_registrierung_wird_abgelehnt():
+    b = MeditrackBackend()
+    p = b.patient_anlegen_mit_email("Erika", "Muster", date(1980, 5, 1), "erika@mail.de")
+    with pytest.raises(ValueError):
+        b.patient_registrieren("erika@mail.de", "kurz")
+    assert not b.hat_konto(p.patient_id)
 
 
 def test_ungueltige_email_legt_keinen_patienten_an():
     b = MeditrackBackend()
     with pytest.raises(ValueError):
-        b.patient_mit_konto_anlegen("Erika", "Muster", date(1980, 5, 1), "keine-email")
+        b.patient_anlegen_mit_email("Erika", "Muster", date(1980, 5, 1), "keine-email")
     assert b.alle_patienten() == []
 
 
 def test_doppelte_email_legt_keinen_zweiten_patienten_an():
     b = MeditrackBackend()
-    b.patient_mit_konto_anlegen("Erika", "Muster", date(1980, 5, 1), "erika@mail.de")
+    b.patient_anlegen_mit_email("Erika", "Muster", date(1980, 5, 1), "erika@mail.de")
     with pytest.raises(ValueError):
-        b.patient_mit_konto_anlegen("Anna", "Beispiel", date(1990, 1, 1), "Erika@Mail.de")
+        b.patient_anlegen_mit_email("Anna", "Beispiel", date(1990, 1, 1), "Erika@Mail.de")
     assert len(b.alle_patienten()) == 1
 
 
-def test_ungueltiger_name_legt_kein_konto_an():
+def test_ungueltiger_name_hinterlegt_keine_email():
     b = MeditrackBackend()
     with pytest.raises(ValueError):
-        b.patient_mit_konto_anlegen("  ", "Muster", date(1980, 5, 1), "erika@mail.de")
-    assert b.benutzer_repo.finde_nach_email("erika@mail.de") is None
+        b.patient_anlegen_mit_email("  ", "Muster", date(1980, 5, 1), "erika@mail.de")
+    assert b.patient_email == {}
 
 
 def test_konto_ohne_verknuepfung_hat_keine_patientenakte():
@@ -152,3 +183,10 @@ def test_demo_patientenkonto_ist_mit_akte_verknuepft():
     demo_daten_laden(b)
     pid = b.patient_id_fuer(b.anmelden("patient@meditrack.test", "demo-passwort"))
     assert pid is not None and b.messungen(pid)
+
+
+def test_demo_patient_karl_kann_sich_registrieren():
+    b = MeditrackBackend()
+    demo_daten_laden(b)
+    konto = b.patient_registrieren("karl@meditrack.test", "langes-passwort")
+    assert b.patient_id_fuer(konto) is not None
